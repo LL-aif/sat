@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天穹卫星钟差预测系统</title>
+    <style>
+        :root {
+            --primary: #7dd3fc;
+            --secondary: #0ea5e9;
+            --dark: #0f172a;
+            --light: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)),
+                        url("https://img2.jiemian.com/101/original/20200518/158979750975021100.png");
+            background-size: cover;
+            background-position: center 30%;
+            background-attachment: fixed;
+            color:var(--light);
+            min-height: 100vh;
+            
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .header {
+            text-align: center;
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+            background: url('https://images.unsplash.com/photo-1464802686167-b939a6910659?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(15, 23, 42, 0.9), rgba(125, 211, 252, 0.2));
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: var(--primary);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .control-card {
+            background: rgba(30, 41, 59, 0.85);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(125, 211, 252, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+            padding-left: 10px;
+            border-left: 3px solid;
+            border-image: linear-gradient(to bottom, var(--primary), var(--secondary)) 1;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 1.2rem;
+            background: rgba(51, 65, 85, 0.7);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            color: var(--light);
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.2);
+        }
+
+        .predict-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+            padding: 1.4rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--dark);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .predict-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(255,255,255,0.2), 
+                transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(125, 211, 252, 0.3);
+        }
+
+        .predict-btn:hover::before {
+            animation: btnGlow 1.5s;
+        }
+
+        .visualization-panel {
+            background: rgba(30, 41, 59, 0.85);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(125, 211, 252, 0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .chart-container {
+            height: 500px;
+            margin-bottom: 2rem;
+        }
+
+        @keyframes btnGlow {
+            0% { left: -50%; }
+            100% { left: 150%; }
+        }
+
+        .satellite-overlay {
+            position: absolute;
+            width: 400px;
+            right: -100px;
+            bottom: -100px;
+            opacity: 0.08;
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>天穹卫星钟差预测系统</h1>
+            <p>高精度GNSS卫星钟差分析与预测平台</p>
+        </header>
+
+        <main class="main-content">
+            <!-- 控制面板 -->
+            <div class="control-card">
+                <div class="input-group">
+                    <label>卫星系统选择</label>
+                    <select id="satellite-system">
+                        <option value="GPS">GPS Block III</option>
+                        <option value="BDS">北斗三号系统</option>
+                        <option value="GALILEO">伽利略二代卫星</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>卫星编号输入</label>
+                    <input type="text" placeholder="请输入PRN/SVN编号" id="satellite-id">
+                </div>
+
+                <div class="input-group">
+                    <label>预测参数设置</label>
+                    <div style="display: grid; gap: 1.2rem;">
+                        <select id="time-range">
+                            <option value="6h">短期预测 (6小时)</option>
+                            <option value="12h">中期预测 (12小时)</option>
+                            <option value="24h">长期预测 (24小时)</option>
+                        </select>
+                        <input type="datetime-local" id="prediction-time">
+                    </div>
+                </div>
+
+                <a href="your_prediction_function.js" class="predict-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M2 12h20"/>
+                    </svg>
+                    开始钟差预测
+                </a>
+            </div>
+
+            <!-- 可视化面板 -->
+            <div class="visualization-panel">
+                <div class="chart-container">
+                    <canvas id="predictionChart"></canvas>
+                    <img src="https://www.freeiconspng.com/uploads/satellite-icon-8.png" 
+                         class="satellite-overlay"
+                         alt="satellite overlay">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 可视化库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- 图表初始化 -->
+    <script>
+        const ctx = document.getElementById('predictionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: '钟差值 (ns)',
+                    borderColor: 'rgba(125, 211, 252, 1)',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    data: [],
+                    fill: true,
+                    backgroundColor: 'rgba(125, 211, 252, 0.08)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        grid: { 
+                            color: 'rgba(71, 85, 105, 0.2)',
+                            borderDash: [5, 5]
+                        },
+                        ticks: { 
+                            color: '#94a3b8',
+                            callback: function(value) {
+                                return value + ' ns'
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { 
+                            color: 'rgba(71, 85, 105, 0.2)',
+                            borderDash: [5, 5]
+                        },
+                        ticks: { 
+                            color: '#94a3b8',
+                            maxRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { 
+                            color: '#94a3b8',
+                            font: { size: 14 }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
